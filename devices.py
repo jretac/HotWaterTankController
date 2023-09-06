@@ -5,7 +5,6 @@ import logging
 import time
 
 
-
 class PlugDevice:
     def __init__(self, mqtt_user: str,
                  mqtt_password: str,
