@@ -39,7 +39,7 @@ class HotWaterTank:
         :return:
         """
         daily_data = self.energy_device.get_overview()
-        monthly_data = self.energy_device.get_overview(stat_type='m')
+        monthly_data = self.energy_device.get_overview(stat_type='month')
         if daily_data['totalOnGridPower'] == '--':
             self._logger.warning(f'Not possible to calculate ratio. '
                                  f'Daily onGridPower: {daily_data["totalOnGridPower"]}')
