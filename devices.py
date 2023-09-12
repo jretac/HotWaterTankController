@@ -36,6 +36,7 @@ class PlugDevice:
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_connect = self._on_connect
         self.mqtt_client.on_message = self._on_message
+        self._mqtt_qos = 0
         self._logger = logging.getLogger(__name__)
 
     def connect(self) -> int:
@@ -86,11 +87,11 @@ class PlugDevice:
 
     def subscribe_to_device(self):
         self.connect()
-        topic_list = [(f'shellies/{self._device_id}/temperature', 0),
-                      (f'shellies/{self._device_id}/relay/0/power', 0),
-                      (f'shellies/{self._device_id}/relay/0', 0),
-                      (f'plug/data', 0),
-                      (f'plug/data/info', 0)]
+        topic_list = [(f'shellies/{self._device_id}/temperature', self._mqtt_qos),
+                      (f'shellies/{self._device_id}/relay/0/power', self._mqtt_qos),
+                      (f'shellies/{self._device_id}/relay/0', self._mqtt_qos),
+                      (f'plug/data', self._mqtt_qos),
+                      (f'plug/data/info', self._mqtt_qos)]
         (result, mid) = self.mqtt_client.subscribe(topic_list)
         if result == mqtt.MQTT_ERR_SUCCESS:
             for topic in topic_list:
@@ -116,7 +117,7 @@ class PlugDevice:
         if'relay/0/power' == message.topic.lstrip(f'shellies/{self._device_id}/'):
             self.power = message.payload.decode()
         if'plug/data' in message.topic:
-            self.mqtt_client.publish('plug/data/info', self.__str__())
+            self.mqtt_client.publish('plug/data/info', self.__str__(), self._mqtt_qos)
         if time.time() - self._subscription_tstamps[message.topic] > self._log_interval:
             self._logger.debug(f'Received message on topic: {message.topic} and data: {message.payload.decode()}')
             self._subscription_tstamps[message.topic] = time.time()
