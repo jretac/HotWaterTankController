@@ -1,5 +1,7 @@
 import threading
 import logging
+import time
+
 import solar
 import devices
 
@@ -23,14 +25,15 @@ class HotWaterTank:
         :param pwd: FuseionSolar password
         :param kwargs: arguments for the MQTT connection
         """
-        self._energy_price_buy = 0.16
-        self._energy_price_sell = 0.11
+        self._energy_price_buy = 1
+        self._energy_price_sell = 1
         self.energy_device = solar.PowerDevice(user, pwd)
         self.timer = None
         self._timer_period = 300     # Timer event period in seconds [s]
         self._run = False
-        self._logger = logging.getLogger('water_tank')
         self.plug = devices.PlugDevice(**kwargs)
+        self._exclusion_time = []
+        self._logger = logging.getLogger('water_tank')
         self._logger.info('Creating device')
 
     def activate_permission(self) -> bool:
@@ -59,6 +62,11 @@ class HotWaterTank:
 
         month_ratio = float(monthly_data['totalOnGridPower']) / float(monthly_data['totalBuyPower'])
         day_ratio = float(daily_data['totalOnGridPower']) / float(daily_data['totalBuyPower'])
+
+        # Check exclusion times
+        for i in range(len(self.exclusion_time)):
+            if self.exclusion_time[i]['start'] <= time.localtime().tm_hour < self.exclusion_time[i]['end'] :
+                return False
         return (day_ratio > 1.1 * self.ratio) or (month_ratio > self.ratio)
 
     def start(self):
@@ -116,6 +124,21 @@ class HotWaterTank:
             self._logger.info(f'Updated energy sell price to: {value}. New ratio: {self.ratio}')
         else:
             raise ZeroDivisionError('Sell energy price cannot be 0.0')
+
+    @property
+    def exclusion_time(self):
+        return self._exclusion_time
+
+    @exclusion_time.setter
+    def exclusion_time(self, time_intervals: list) -> None:
+        if type(time_intervals) is not list:
+            time_intervals = [time_intervals]
+        for i in range(len(time_intervals)):
+            interval = {
+                'start': int(time_intervals[i].split('-')[0]),
+                'end': int(time_intervals[i].split('-')[1])
+                        }
+            self._exclusion_time.append(interval)
 
 
 if __name__ == '__main__':
