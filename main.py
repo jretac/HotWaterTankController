@@ -3,6 +3,8 @@ import logging.handlers
 import shutil
 import gzip
 import os
+import sys
+
 import hot_water_tank as hwt
 
 
@@ -51,8 +53,12 @@ if __name__ == '__main__':
         logging_level = logging.ERROR
 
     # CREATE LOGGER
-    if not os.path.isdir('log'):
-        os.mkdir('log')
+    os.path.dirname(__file__)
+    venv_bin = os.path.split(sys.executable)[0]
+    venv = os.path.split(venv_bin)[0]
+    project = os.path.split(venv)[0]
+    if not os.path.isdir(os.path.join(project, 'log')):
+        os.mkdir(os.path.join(project, 'log'))
 
     rh_1 = logging.handlers.RotatingFileHandler('log/HWTC_backup.log',
                                                 maxBytes=1024 * 1024,
