@@ -33,6 +33,8 @@ class HotWaterTank:
         self._run = False
         self.plug = devices.PlugDevice(**kwargs)
         self._exclusion_time = []
+        self._ratio_monthly = None
+        self._ratio_daily = None
         self._logger = logging.getLogger('water_tank')
         self._logger.info('Creating device')
 
@@ -60,14 +62,14 @@ class HotWaterTank:
                                  f'Monthly totalBuyPower: {monthly_data["totalBuyPower"]}')
             return False
 
-        month_ratio = float(monthly_data['totalOnGridPower']) / float(monthly_data['totalBuyPower'])
-        day_ratio = float(daily_data['totalOnGridPower']) / float(daily_data['totalBuyPower'])
+        self.ratio_monthly = float(monthly_data['totalOnGridPower']) / float(monthly_data['totalBuyPower'])
+        self.ratio_daily = float(daily_data['totalOnGridPower']) / float(daily_data['totalBuyPower'])
 
         # Check exclusion times
         for i in range(len(self.exclusion_time)):
-            if self.exclusion_time[i]['start'] <= time.localtime().tm_hour < self.exclusion_time[i]['end'] :
+            if self.exclusion_time[i]['start'] <= time.localtime().tm_hour < self.exclusion_time[i]['end']:
                 return False
-        return (day_ratio > 1.1 * self.ratio) or (month_ratio > self.ratio)
+        return (self.ratio_daily > 1.1 * self.ratio_threshold) or (self.ratio_monthly > self.ratio_threshold)
 
     def start(self):
         """
@@ -96,12 +98,34 @@ class HotWaterTank:
             self.timer = threading.Timer(self._timer_period, self._loop).start()
 
     @property
-    def ratio(self):
+    def ratio_threshold(self):
         return self.energy_price_buy / self.energy_price_sell
 
-    @ratio.setter
-    def ratio(self, value: float):
-        raise ValueError('field `ratio` cannot be assigned, modify energy prices instead')
+    @ratio_threshold.setter
+    def ratio_threshold(self, value: float):
+        raise ValueError('field `ratio_threshold` cannot be assigned, modify energy prices instead')
+
+    @property
+    def ratio_daily(self):
+        return self._ratio_daily
+
+    @ratio_daily.setter
+    def ratio_daily(self, value: float):
+        if value < 0:
+            raise ValueError(f'daily ration `ratio_daily` cannot be a negative number')
+        else:
+            self._ratio_daily = value
+
+    @property
+    def ratio_monthly(self):
+        return self._ratio_monthly
+
+    @ratio_monthly.setter
+    def ratio_monthly(self, value: float):
+        if value < 0:
+            raise ValueError(f'daily ration `ratio_daily` cannot be a negative number')
+        else:
+            self._ratio_monthly = value
 
     @property
     def energy_price_buy(self):
@@ -111,7 +135,7 @@ class HotWaterTank:
     def energy_price_buy(self, value: float):
         if value != 0.0:
             self._energy_price_buy = value
-            self._logger.info(f'Updated energy buy price to: {value}. New ratio: {self.ratio}')
+            self._logger.info(f'Updated energy buy price to: {value}. New ratio_threshold: {self.ratio_threshold}')
 
     @property
     def energy_price_sell(self):
@@ -121,7 +145,7 @@ class HotWaterTank:
     def energy_price_sell(self, value: float):
         if value != 0.0:
             self._energy_price_sell = value
-            self._logger.info(f'Updated energy sell price to: {value}. New ratio: {self.ratio}')
+            self._logger.info(f'Updated energy sell price to: {value}. New ratio: {self.ratio_threshold}')
         else:
             raise ZeroDivisionError('Sell energy price cannot be 0.0')
 
