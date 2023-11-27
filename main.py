@@ -23,22 +23,21 @@ if __name__ == '__main__':
     # READ CONFIGURATION FILE
     import configparser
     config = configparser.ConfigParser()
-    config.read('heater_config.ini')
+    config.read(os.path.join(os.path.dirname(__file__), 'heater_config.ini'))
 
     huawei_user = config['HUAWEI']['huawei_user']
     huawei_password = config['HUAWEI']['huawei_password']
-    mqtt_user = config['MQTT']['mqtt_user']
-    mqtt_password = config['MQTT']['mqtt_password']
-    mqtt_broker = config['MQTT']['mqtt_broker']
-    mqtt_port = config['MQTT'].getint('mqtt_port')
-    mqtt_device_id = config['MQTT']['mqtt_device_id']
+
     mqtt_data = {
-        'mqtt_user': mqtt_user,
-        'mqtt_password': mqtt_password,
-        'mqtt_broker': mqtt_broker,
-        'mqtt_device_id': mqtt_device_id,
-        'mqtt_port': mqtt_port
+        'mqtt_user': config['MQTT']['mqtt_user'],
+        'mqtt_password': config['MQTT']['mqtt_password'],
+        'mqtt_broker': config['MQTT']['mqtt_broker'],
+        'mqtt_device_id': config['MQTT']['mqtt_device_id'],
+        'mqtt_port': config['MQTT'].getint('mqtt_port'),
+        'mqtt_retain': config['MQTT'].getboolean('mqtt_retain'),
+        'mqtt_qos': config['MQTT'].getint('mqtt_qos')
     }
+
     energy_buy_price = config['ENERGY'].getfloat('buy_price')
     energy_sell_price = config['ENERGY'].getfloat('sell_price')
     exclusion_time = config['ENERGY']['exclusion_time']
@@ -53,17 +52,18 @@ if __name__ == '__main__':
         logging_level = logging.ERROR
 
     # CREATE LOGGER
-    os.path.dirname(__file__)
+
     venv_bin = os.path.split(sys.executable)[0]
     venv = os.path.split(venv_bin)[0]
     project = os.path.split(venv)[0]
-    if not os.path.isdir(os.path.join(project, 'log')):
-        os.mkdir(os.path.join(project, 'log'))
+    log_dir = os.path.join(project, 'log')
+    if not os.path.isdir(log_dir):
+        os.mkdir(log_dir)
 
-    rh_1 = logging.handlers.RotatingFileHandler('log/HWTC_backup.log',
+    rh_1 = logging.handlers.RotatingFileHandler(os.path.join(log_dir, 'HWTC_backup.log'),
                                                 maxBytes=1024 * 1024,
                                                 backupCount=50)
-    rh_2 = logging.handlers.TimedRotatingFileHandler('log/HWTC_daily.log',
+    rh_2 = logging.handlers.TimedRotatingFileHandler(os.path.join(log_dir, 'HWTC_daily.log'),
                                                      when='D',
                                                      interval=1,
                                                      backupCount=50)
