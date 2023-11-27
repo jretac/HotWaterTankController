@@ -61,6 +61,8 @@ mqtt_broker =
 mqtt_port = 
 mqtt_device_id = 
 mqtt_keepalive =
+mqtt_retain = 
+mqtt_qos = 
 
 [ENERGY]
 buy_price = 
