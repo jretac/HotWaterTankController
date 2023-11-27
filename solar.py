@@ -3,6 +3,7 @@ import datetime
 import logging
 import fusion_solar_py.client as fsc
 import fusion_solar_py.exceptions as fsc_exceptions
+import requests
 
 solar_logger = logging.getLogger(__name__)
 
@@ -60,10 +61,14 @@ class FusionSolarClientExtended(fsc.FusionSolarClient):
             'dateStr': date.strftime('%Y-%m-%d %H:%M:%S'),
             "_": round(time.time() * 1000)
         }
-        r = self._session.get(url=url,
-                              params=params)
-        r.raise_for_status()
-        plant_data = r.json()
+        try:
+            r = self._session.get(url=url,
+                                  params=params)
+            r.raise_for_status()
+            plant_data = r.json()
+        except requests.exceptions.ConnectionError as e:
+            solar_logger.error(e.response)
+            return {}
 
         if not plant_data["success"] or "data" not in plant_data:
             raise fsc_exceptions.FusionSolarException(
@@ -116,7 +121,7 @@ class PowerDevice:
                 'usePower': use_power}
 
     def get_overview(self,
-                     date: datetime.datetime = datetime.datetime.now(),
+                     date: datetime.datetime = None,
                      stat_type: str = 'day') -> dict:
         """
         Returns all the information for a specific aggregate type
@@ -128,7 +133,8 @@ class PowerDevice:
         '``lifetime``' for lifetime data,
         :return:
         """
-
+        if date is None:
+            date = datetime.datetime.now()
         return self.client.get_plant_stats(self._plant_id,
                                            query_time=round(date.timestamp()) * 1000, stat_type=stat_type)
 
