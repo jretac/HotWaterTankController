@@ -18,8 +18,8 @@ Shelly Plug S device that can be managed through MQTT, based on data from Huawei
 
 The main goal is to keep the hot water tank switched on the maximum possible time while keeping a balance between 
 the generated and consumed energy.  
-The default configuration aims a positive money balance. This means that the hot water tank is switched
-on if the value of sold energy is greater than the value of the bought energy for the current month. The buy and sell prices are set through 
+The default configuration aims a positive money balance. This means that **the hot water tank is switched
+on if the value of sold energy is greater than the value of the bought energy for the current month**. The buy and sell prices are set through 
 the configuration file, as well as all the connection information for the FusionSolar API and the MQTT connection.
 
 The controller manages the power source for the water tank based on the sell-to-buy energy(kWh) ratio. If this ratio is 
@@ -121,7 +121,7 @@ Methods `connect`, `disconnect` and `is_connected` are used for the MQTT interfa
 **solar** module contains 2 classes: `FusionSolarClientExtended` and `PowerDevice`.  
 
 ### FusionSolarClientExtended
-`FusionSolarClientExtended` is a subclass of the `FusionSolarClient` from the *fusion-solar-py* module.
+`FusionSolarClientExtended` is a subclass of the `FusionSolarClient` from the *fusion-solar-py* package.
 This subclass overrides the `get_plant_stats` method but still 
 keeps compatibility with the original method.  
 The two differences with the original mehtod are:
@@ -228,7 +228,7 @@ Restart=on-failure
 [Install]
 WantedBy=default.target
 ```
-Move the file to folder `/user/local/lib`
+Move the file to folder `/usr/local/lib`
 ```shell
 sudo mkdir /usr/local/lib/HotWaterTank_service
 sudo mv /path/to/your/project/main.py /usr/local/lib/HotWaterTankController_service/
