@@ -57,7 +57,7 @@ class FusionSolarClientExtended(fsc.FusionSolarClient):
             'timeDim': stat_dim,
             'queryTime': round(date.timestamp()) * 1000,
             'timeZone': 2,
-            'timeZoneStr': 'Europe/Viena',
+            'timeZoneStr': 'Europe/Madrid',
             'dateStr': date.strftime('%Y-%m-%d %H:%M:%S'),
             "_": round(time.time() * 1000)
         }
@@ -133,6 +133,7 @@ class PowerDevice:
         '``lifetime``' for lifetime data,
         :return:
         """
+        self.client._configure_session()
         if date is None:
             date = datetime.datetime.now()
         return self.client.get_plant_stats(self._plant_id,
