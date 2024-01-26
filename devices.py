@@ -72,24 +72,32 @@ class PlugDevice:
         return self.mqtt_client.is_connected()
 
     def device_on(self):
-        self.connect()
+        if not self.is_connected():
+            self._logger.debug('Device On: Requesting connection')
+            self.connect()
         if self.state == 'off' or self.state is None:
             self._logger.info('Sending Device ON')
             self.mqtt_client.publish(f'shellies/{self.mqtt_device_id}/relay/0/command', 'on')
 
     def device_off(self):
-        self.connect()
+        if not self.is_connected():
+            self._logger.debug('Device Off: Requesting connection')
+            self.connect()
         if self.state == 'on' or self.state is None:
             self._logger.info('Sending Device OFF')
             self.mqtt_client.publish(f'shellies/{self.mqtt_device_id}/relay/0/command', 'off')
 
     def device_toggle(self):
-        self.connect()
+        if not self.is_connected():
+            self._logger.debug('Device Toggle: Requesting connection')
+            self.connect()
         self._logger.info('Sending Device TOGGLE')
         self.mqtt_client.publish(f'shellies/{self.mqtt_device_id}/relay/0/command', 'toggle')
 
     def subscribe_to_device(self):
-        self.connect()
+        if not self.is_connected():
+            self._logger.debug('Subscribe: Requesting connection')
+            self.connect()
         topic_list = [(f'shellies/{self.mqtt_device_id}/temperature', self._mqtt_qos),
                       (f'shellies/{self.mqtt_device_id}/relay/0/power', self._mqtt_qos),
                       (f'shellies/{self.mqtt_device_id}/relay/0', self._mqtt_qos),
@@ -134,11 +142,14 @@ if __name__ == '__main__':
     import configparser
     config = configparser.ConfigParser()
     config.read('heater_config.ini')
-
+    import sys
+    lh = logging.StreamHandler(sys.stdout)
+    lh.setLevel(logging.INFO)
     logging.basicConfig(
         format='%(asctime)s | %(name)-10s | %(levelname)-10s | %(message)s',
-        level=logging.INFO,
-        datefmt='%Y/%d/%m %H:%M:%S')
+        level=logging.DEBUG,
+        datefmt='%Y/%d/%m %H:%M:%S',
+        handlers=[lh])
 
     mqtt_data = {
         'mqtt_user': config['MQTT']['mqtt_user'],

@@ -167,6 +167,15 @@ class HotWaterTank:
 
 if __name__ == '__main__':
     import configparser
+    import sys
+    lh = logging.StreamHandler(sys.stdout)
+    lh.setLevel(logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s | %(name)-10s | %(levelname)-10s | %(message)s',
+        level=logging.INFO,
+        datefmt='%Y/%d/%m %H:%M:%S',
+        handlers=[lh])
+
     config = configparser.ConfigParser()
     config.read('heater_config.ini')
 
