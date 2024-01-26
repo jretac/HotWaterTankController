@@ -91,7 +91,7 @@ class PowerDevice:
         :raise AuthenticationException if credentials are incorrect
         """
         try:
-            self.client = FusionSolarClientExtended(user, password)
+            self.client = FusionSolarClientExtended(user, password, huawei_subdomain="uni001eu5")
         except fsc_exceptions.AuthenticationException as except1:
             solar_logger.error(f'Logging error with user: {user} and password: {password}. {except1.args}')
             raise except1
