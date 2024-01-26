@@ -172,7 +172,7 @@ if __name__ == '__main__':
     lh.setLevel(logging.INFO)
     logging.basicConfig(
         format='%(asctime)s | %(name)-10s | %(levelname)-10s | %(message)s',
-        level=logging.INFO,
+        level=logging.DEBUG,
         datefmt='%Y/%d/%m %H:%M:%S',
         handlers=[lh])
 
