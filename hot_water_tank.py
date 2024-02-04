@@ -62,8 +62,15 @@ class HotWaterTank:
                                  f'Monthly totalBuyPower: {monthly_data["totalBuyPower"]}')
             return False
 
-        self.ratio_monthly = float(monthly_data['totalOnGridPower']) / float(monthly_data['totalBuyPower'])
-        self.ratio_daily = float(daily_data['totalOnGridPower']) / float(daily_data['totalBuyPower'])
+        try:
+            self.ratio_monthly = float(monthly_data['totalOnGridPower']) / float(monthly_data['totalBuyPower'])
+        except ZeroDivisionError:
+            self.ratio_monthly = 0
+
+        try:
+            self.ratio_daily = float(daily_data['totalOnGridPower']) / float(daily_data['totalBuyPower'])
+        except ZeroDivisionError:
+            self.ratio_daily = 0
 
         # Check exclusion times
         for i in range(len(self.exclusion_time)):
@@ -186,12 +193,14 @@ if __name__ == '__main__':
     mqtt_broker = config['MQTT']['mqtt_broker']
     mqtt_port = config['MQTT'].getint('mqtt_port')
     mqtt_device_id = config['MQTT']['mqtt_device_id']
+    mqtt_qos = config['MQTT']['mqtt_qos']
     mqtt_data = {
         'mqtt_user': mqtt_user,
         'mqtt_password': mqtt_password,
         'mqtt_broker': mqtt_broker,
         'mqtt_device_id': mqtt_device_id,
-        'mqtt_port': mqtt_port
+        'mqtt_port': mqtt_port,
+        'mqtt_qos': mqtt_qos
     }
     controller = HotWaterTank(huawei_user, huawei_password, **mqtt_data)
     controller.start()
