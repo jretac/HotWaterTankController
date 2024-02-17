@@ -1,6 +1,7 @@
 import threading
 import logging
 import time
+import requests.exceptions
 
 import solar
 import devices
@@ -45,31 +46,36 @@ class HotWaterTank:
         """
         daily_data = self.energy_device.get_overview()
         monthly_data = self.energy_device.get_overview(stat_type='month')
+
+        if not daily_data:
+            daily_data['totalOnGridPower'] = '--'
+            daily_data['totalBuyPower'] = '--'
+
+        if not monthly_data:
+            monthly_data['totalOnGridPower'] = '--'
+            monthly_data['totalBuyPower'] = '--'
+
         if daily_data['totalOnGridPower'] == '--':
             self._logger.warning(f'Not possible to calculate ratio. '
                                  f'Daily onGridPower: {daily_data["totalOnGridPower"]}')
-            return False
         if daily_data['totalBuyPower'] == '--':
             self._logger.warning(f'Not possible to calculate ratio. '
                                  f'Daily BuyPower: {daily_data["totalBuyPower"]}')
-            return False
         if monthly_data['totalOnGridPower'] == '--':
             self._logger.warning(f'Not possible to calculate ratio. '
                                  f'Monthly onGridPower: {monthly_data["totalOnGridPower"]}')
-            return False
         if monthly_data['totalBuyPower'] == '--':
             self._logger.warning(f'Not possible to calculate ratio. '
                                  f'Monthly totalBuyPower: {monthly_data["totalBuyPower"]}')
-            return False
 
         try:
             self.ratio_monthly = float(monthly_data['totalOnGridPower']) / float(monthly_data['totalBuyPower'])
-        except ZeroDivisionError:
+        except (ZeroDivisionError, ValueError):
             self.ratio_monthly = 0
 
         try:
             self.ratio_daily = float(daily_data['totalOnGridPower']) / float(daily_data['totalBuyPower'])
-        except ZeroDivisionError:
+        except (ZeroDivisionError, ValueError):
             self.ratio_daily = 0
 
         # Check exclusion times
