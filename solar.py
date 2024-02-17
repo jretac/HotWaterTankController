@@ -5,14 +5,18 @@ import fusion_solar_py.client as fsc
 import fusion_solar_py.exceptions as fsc_exceptions
 import requests
 
-solar_logger = logging.getLogger(__name__)
-
 
 class FusionSolarClientExtended(fsc.FusionSolarClient):
     """
     Subclass of FusionSolarClient that overrides the get_plant_stats method
     to allow querying aggregate data for day, month, year or complete lifetime
     """
+
+    def __init__(self, username: str, password: str, huawei_subdomain: str = "uni001eu5"):
+
+        super().__init__(username, password, huawei_subdomain)
+        self._logger = logging.getLogger(__name__)
+
     @fsc.logged_in
     def get_plant_stats(self, plant_id: str,
                         query_time: int = round(datetime.datetime.utcnow().timestamp()) * 1000,
@@ -32,20 +36,20 @@ class FusionSolarClientExtended(fsc.FusionSolarClient):
         """
         date = datetime.datetime.fromtimestamp(query_time / 1000)
         if stat_type.lower() == 'day':
-            stat_dim = 2   # Day
+            stat_dim = 2  # Day
             date = date - datetime.timedelta(hours=date.hour, minutes=date.minute,
                                              seconds=date.second, microseconds=date.microsecond)
         elif stat_type.lower() == 'month':
-            stat_dim = 4   # Month
+            stat_dim = 4  # Month
             date = date - datetime.timedelta(days=date.day - 1, hours=date.hour, minutes=date.minute,
                                              seconds=date.second, microseconds=date.microsecond)
         elif stat_type.lower() == 'year':
-            stat_dim = 5   # Year
+            stat_dim = 5  # Year
             date.replace(month=1)
             date = date - datetime.timedelta(days=date.day - 1, hours=date.hour, minutes=date.minute,
                                              seconds=date.second, microseconds=date.microsecond)
         elif stat_type.lower() == 'lifetime':
-            stat_dim = 6   # Lifetime
+            stat_dim = 6  # Lifetime
         else:
             stat_dim = 2
             date = date - datetime.timedelta(hours=date.hour, minutes=date.minute,
@@ -67,7 +71,7 @@ class FusionSolarClientExtended(fsc.FusionSolarClient):
             r.raise_for_status()
             plant_data = r.json()
         except requests.exceptions.ConnectionError as e:
-            solar_logger.error(e.response)
+            self._logger.error(e.response)
             return {}
 
         if not plant_data["success"] or "data" not in plant_data:
@@ -83,6 +87,7 @@ class PowerDevice:
     """
     Class representing data from a FusionSolar station
     """
+
     def __init__(self, user: str, password: str):
         """
         Creates a power / energy data device
@@ -90,10 +95,11 @@ class PowerDevice:
         :param password:
         :raise AuthenticationException if credentials are incorrect
         """
+        self._logger = logging.getLogger(__name__)
         try:
             self.client = FusionSolarClientExtended(user, password, huawei_subdomain="uni001eu5")
         except fsc_exceptions.AuthenticationException as except1:
-            solar_logger.error(f'Logging error with user: {user} and password: {password}. {except1.args}')
+            self._logger.error(f'Logging error with user: {user} and password: {password}. {except1.args}')
             raise except1
         self.plant_ids = self.client.get_plant_ids()
         self._plant_id = self.plant_ids[0]
@@ -133,7 +139,12 @@ class PowerDevice:
         '``lifetime``' for lifetime data,
         :return:
         """
-        self.client._configure_session()
+        try:
+            self.client._configure_session()
+        except requests.exceptions.ConnectionError as e:
+            self._logger.warning(f'Connection error: {e.response}')
+            return {}
+
         if date is None:
             date = datetime.datetime.now()
         return self.client.get_plant_stats(self._plant_id,
@@ -144,7 +155,9 @@ if __name__ == '__main__':
     def get_tstamp(year: int, month: int, day: int, hour: int, minute: int) -> time.struct_time:
         return time.strptime(f'{year}{month}{day}{hour}{minute}00', '%Y%m%d%H%M%S')
 
+
     import configparser
+
     config = configparser.ConfigParser()
     config.read('heater_config.ini')
     huawei_user = config['HUAWEI']['huawei_user']
