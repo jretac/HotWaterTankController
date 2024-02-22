@@ -10,7 +10,7 @@
    2. [Solar module](#solar-module)
    3. [Hot Water Tank module](#hot-water-tank-module)
 3. [Mosquitto Broker](#mosquitto-broker)
-4. [Run as a Service](#run-as-a-service)
+4. [Run as a Service](#run-as-service)
 
 # HotWaterTankController
 
