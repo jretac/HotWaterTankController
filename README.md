@@ -10,6 +10,7 @@
    2. [Solar module](#solar-module)
    3. [Hot Water Tank module](#hot-water-tank-module)
 3. [Mosquitto Broker](#mosquitto-broker)
+4. [Run as a Service](#run-as-service)
 
 # HotWaterTankController
 
@@ -213,6 +214,7 @@ sudo systemctl restart mosquitto.service
 ```
 
 # Run as Service
+
 Create a file with this content:
 File name: `hotwatertank-controller.service`
 ```text
