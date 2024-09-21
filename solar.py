@@ -14,7 +14,7 @@ class FusionSolarClientExtended(fsc.FusionSolarClient):
 
     def __init__(self, username: str, password: str, huawei_subdomain: str = "uni001eu5"):
 
-        super().__init__(username, password, huawei_subdomain)
+        super().__init__(username, password, huawei_subdomain, captcha_model_path='captcha_huawei.onnx')
         self._logger = logging.getLogger(__name__)
 
     @fsc.logged_in
